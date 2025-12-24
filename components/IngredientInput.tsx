@@ -42,7 +42,14 @@ export default function IngredientInput({ ingredients, onChange }: Props) {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        <VoiceInput onResult={(text) => setInputValue(text)} />
+        <VoiceInput onResult={(text) => {
+          const newIngs = text.split(/[\s,]+/).filter(ing => ing.trim() && !ingredients.includes(ing.trim()));
+          if (newIngs.length > 0) {
+            onChange([...ingredients, ...newIngs.map(i => i.trim())]);
+          } else {
+            setInputValue(text);
+          }
+        }} />
         <button className={styles.addButton} onClick={addIngredient}>
           추가
         </button>

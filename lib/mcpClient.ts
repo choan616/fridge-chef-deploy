@@ -24,19 +24,19 @@ export async function suggestRecipes(ingredients: string[]): Promise<Recipe[]> {
         messages: [
           {
             role: "system",
-            content: "You are a professional chef. Suggest 3 recipes based on user ingredients. Return strictly a JSON array."
+            content: "당신은 냉장고 재료를 활용해 최고의 한국 요리를 제안하는 전문 셰프입니다. 사용자의 재료를 바탕으로 한국 식문화에 어울리는 자연스럽고 맛있는 레시피 3가지를 제안하세요. 모든 답변은 처음부터 한국어로 생각하고 작성하며, 번역된 말투가 아닌 한국인이 사용하는 자연스러운 용어를 사용해야 합니다. 결과는 반드시 JSON 배열 형태로 반환하세요."
           },
           {
             role: "user",
-            content: `Ingredients: ${ingredients.join(", ")}. 
-            Return strictly a JSON array of objects. 
-            Each object should have:
-            - id: string (concise slug)
-            - title: string (in Korean)
-            - description: string (in Korean, brief)
-            - ingredients: string[] (in Korean)
-            - cookTime: string (e.g., "15분")
-            - thumbnailUrl: string (empty string "")`
+            content: `재료: ${ingredients.join(", ")}. 
+            한국어로 3가지 레시피를 제안해줘.
+            반드시 다음 형식을 따르는 JSON 객체의 배열을 반환해야 해:
+            - id: string (영문 소문자와 하이픈으로 된 짧은 식별자, 예: 'kimchi-stew')
+            - title: string (자연스러운 한국어 요리명)
+            - description: string (요리에 대한 간단하고 매력적인 한국어 설명)
+            - ingredients: string[] (필요한 재료 목록, 한국어로)
+            - cookTime: string (예: "15분", "30분 내외")
+            - thumbnailUrl: string (빈 문자열 "" 사용)`
           }
         ],
         model: "llama-3.3-70b-versatile",
@@ -78,20 +78,20 @@ export async function getRecipeSteps(recipeId: string, recipeTitle?: string, ser
        console.log('[getRecipeSteps] Sending request to Groq API...');
        const completion = await groq.chat.completions.create({
          messages: [
-           {
-             role: "system",
-             content: "You are a professional chef. Create detailed cooking steps. Return strictly a JSON array."
-           },
-           {
-             role: "user",
-             content: `Recipe: "${title}" for ${servings} servings.
-             Return strictly a JSON array of objects.
-             Each object should have:
-             - step: number
-             - instruction: string (in Korean, detailed)
-             - tip: string (optional, helpful tip in Korean)`
-           }
-         ],
+          {
+            role: "system",
+            content: "당신은 친절한 요리 선생님입니다. 레시피 제목과 인원수에 맞춰 상세하고 따라하기 쉬운 요리 단계를 한국어로 작성하세요. 번역체 없이 한국 요리 관습과 자연스러운 표현을 사용해야 합니다. 결과는 반드시 JSON 배열 형태로 반환하세요."
+          },
+          {
+            role: "user",
+            content: `레시피 명: "${title}", 인원수: ${servings}인분.
+            요리 순서를 상세히 알려줘.
+            반드시 다음 형식을 따르는 JSON 객체의 배열을 반환해야 해:
+            - step: number (순서 번호)
+            - instruction: string (상세한 요리 방법, 자연스러운 한국어로)
+            - tip: string (요리에 도움이 되는 팁, 선택 사항, 한국어로)`
+          }
+        ],
          model: "llama-3.3-70b-versatile",
          response_format: { type: "json_object" }
        });

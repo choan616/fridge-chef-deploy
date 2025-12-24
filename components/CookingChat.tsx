@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { RecipeStep } from "@/types";
 import styles from "./CookingChat.module.css";
 
+import { getSubstitutes } from "@/lib/mcpClient";
+
 interface Props {
   steps: RecipeStep[];
   recipeId: string;
@@ -18,6 +20,9 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [substitutes, setSubstitutes] = useState<any>(null);
+  const [isLoadingSubs, setIsLoadingSubs] = useState(false);
+  
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
   const indexRef = useRef(currentStepIndex);
@@ -27,11 +32,14 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
     indexRef.current = currentStepIndex;
   }, [currentStepIndex]);
 
-  const speak = (text: string) => {
+  const speak = (text: string, onEnd?: () => void) => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ko-KR';
+      if (onEnd) {
+        utterance.onend = onEnd;
+      }
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -39,7 +47,12 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
   // TTS Effect
   useEffect(() => {
     if (isVoiceMode && currentStep && !isCompleted) {
-      speak(currentStep.instruction);
+      speak(currentStep.instruction, () => {
+        // After reading instruction, ask if they want to move to next step
+        setTimeout(() => {
+            speak("다음단계로 넘어갈까요?");
+        }, 1000);
+      });
     }
   }, [currentStepIndex, isVoiceMode, currentStep, isCompleted]);
 
@@ -61,6 +74,22 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
     }
   };
 
+  const handleGetSubstitutes = async () => {
+    // For simplicity, we'll try to get substitutes for the first 2 ingredients of the recipe
+    // Or we could parse the current instruction. Let's just use the recipe context for now.
+    setIsLoadingSubs(true);
+    setSubstitutes(null);
+    try {
+        // We'll ask the model to suggest substitutes based on the recipe title
+        const result = await getSubstitutes("주요 재료", title);
+        setSubstitutes(result);
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setIsLoadingSubs(false);
+    }
+  };
+
   // Voice Recognition Effect
   useEffect(() => {
     let recognition: any = null;
@@ -79,18 +108,25 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
 
         if (text.includes("이전") || text.includes("뒤로")) {
           setCurrentStepIndex(prev => Math.max(prev - 1, 0));
-        } else if (text.includes("다음") || text.includes("넘겨") || text.includes("가자")) {
+        } else if (
+            text.includes("다음") || 
+            text.includes("넘겨") || 
+            text.includes("가자") ||
+            text.includes("네") ||
+            text.includes("응") ||
+            text.includes("어") ||
+            text.includes("그래")
+        ) {
           if (isLastStep) {
              setIsCompleted(true);
              speak("요리가 완성되었습니다. 수고하셨어요!");
           } else {
              setCurrentStepIndex(prev => Math.min(prev + 1, steps.length - 1));
           }
-        } else if (text.includes("다시") || text.includes("읽어")) {
+        } else if (text.includes("다시") || text.includes("읽어") || text.includes("뭐라고")) {
           const step = steps[indexRef.current];
           if (step) speak(step.instruction);
         } else if (isLastStep && (text.includes("저장") || text.includes("홈") || text.includes("처음"))) {
-            // Easy voice commands for end state could be added here
             if (text.includes("홈") || text.includes("처음")) handleHome();
             if (text.includes("저장")) handleSave();
         }
@@ -199,6 +235,21 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
             </div>
           )}
         </div>
+
+        {isLoadingSubs && <div className={styles.loadingSubs}>대체 재료를 찾는 중...</div>}
+        
+        {substitutes && (
+          <div className={styles.substitutesArea}>
+            <h3>💡 {substitutes.ingredient} 대체 제안</h3>
+            <ul>
+              {substitutes.substitutes.map((s: string, i: number) => (
+                <li key={i}>{s}</li>
+              ))}
+            </ul>
+            <p className={styles.advice}>{substitutes.advice}</p>
+            <button className={styles.closeSubs} onClick={() => setSubstitutes(null)}>닫기</button>
+          </div>
+        )}
       </div>
 
       <div className={styles.controls}>
@@ -217,7 +268,7 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
           >
             ← 이전
           </button>
-          <button className={styles.actionButton}>대체 재료?</button>
+          <button className={styles.actionButton} onClick={handleGetSubstitutes}>대체 재료?</button>
         </div>
         
         <button 
