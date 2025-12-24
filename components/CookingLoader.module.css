@@ -1,0 +1,85 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.pan {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 4px solid #333;
+  margin-bottom: 2rem;
+  animation: toss 1.5s ease-in-out infinite;
+  transform-origin: 100% 50%;
+}
+
+.handle {
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 25px;
+  height: 8px;
+  background: #333;
+  border-radius: 0 4px 4px 0;
+}
+
+.food {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  background: var(--primary);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: flip 1.5s ease-in-out infinite;
+}
+
+.text {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  font-weight: 500;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes toss {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-15deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes flip {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -150%) scale(1.2);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
