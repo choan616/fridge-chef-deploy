@@ -65,7 +65,7 @@ export async function getRecipeSteps(recipeId: string, recipeTitle?: string, ser
     console.error(errorMsg);
     // Return a mock step with error info so we can see it on the page
     return [{
-      step: 1,
+      stepNumber: 1,
       instruction: `디버깅 정보: API 키가 없습니다. genAI: ${!!genAI}, API Key 존재: ${!!process.env.GEMINI_API_KEY}, 길이: ${process.env.GEMINI_API_KEY?.length || 0}`,
       tip: "Vercel 환경 변수를 확인해주세요"
     }];
@@ -106,7 +106,7 @@ export async function getRecipeSteps(recipeId: string, recipeTitle?: string, ser
     
     // Return error info as a step so we can see it
     return [{
-      step: 1,
+      stepNumber: 1,
       instruction: `디버깅 정보: API 호출 실패 - ${error?.message || '알 수 없는 오류'}`,
       tip: `에러 타입: ${error?.name || 'Unknown'}`
     }];
