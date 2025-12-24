@@ -57,10 +57,18 @@ export async function suggestRecipes(ingredients: string[]): Promise<Recipe[]> {
 
 export async function getRecipeSteps(recipeId: string, recipeTitle?: string, servings: number = 2): Promise<RecipeStep[]> {
   console.log('[getRecipeSteps] Called with:', { recipeId, recipeTitle, servings });
+  console.log('[getRecipeSteps] Environment check - API Key exists:', !!process.env.GEMINI_API_KEY);
+  console.log('[getRecipeSteps] Environment check - API Key length:', process.env.GEMINI_API_KEY?.length || 0);
   
   if (!genAI) {
-    console.error("[getRecipeSteps] GEMINI_API_KEY is missing - genAI is null");
-    return [];
+    const errorMsg = `[getRecipeSteps] GEMINI_API_KEY is missing - genAI is null. API Key present: ${!!process.env.GEMINI_API_KEY}`;
+    console.error(errorMsg);
+    // Return a mock step with error info so we can see it on the page
+    return [{
+      step: 1,
+      instruction: `디버깅 정보: API 키가 없습니다. genAI: ${!!genAI}, API Key 존재: ${!!process.env.GEMINI_API_KEY}, 길이: ${process.env.GEMINI_API_KEY?.length || 0}`,
+      tip: "Vercel 환경 변수를 확인해주세요"
+    }];
   }
   
   const title = recipeTitle || recipeId;
@@ -95,6 +103,12 @@ export async function getRecipeSteps(recipeId: string, recipeTitle?: string, ser
     console.error("[getRecipeSteps] Error name:", error?.name);
     console.error("[getRecipeSteps] Error message:", error?.message);
     console.error("[getRecipeSteps] Error stack:", error?.stack);
-    return [];
+    
+    // Return error info as a step so we can see it
+    return [{
+      step: 1,
+      instruction: `디버깅 정보: API 호출 실패 - ${error?.message || '알 수 없는 오류'}`,
+      tip: `에러 타입: ${error?.name || 'Unknown'}`
+    }];
   }
 }
