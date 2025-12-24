@@ -21,7 +21,7 @@ export async function suggestRecipes(ingredients: string[]): Promise<Recipe[]> {
 
   try {
       console.log('[suggestRecipes] Initializing Gemini model...');
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       
       const prompt = `
         You are a professional chef. Suggest 3 recipes based on these ingredients: ${ingredients.join(", ")}.
@@ -76,7 +76,7 @@ export async function getRecipeSteps(recipeId: string, recipeTitle?: string, ser
 
   try {
        console.log('[getRecipeSteps] Initializing Gemini model...');
-       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
        
        const prompt = `
          Create detailed cooking steps for the recipe "${title}".
