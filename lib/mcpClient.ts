@@ -40,10 +40,11 @@ export async function suggestRecipes(ingredients: string[]): Promise<Recipe[]> {
           }
         ],
         model: "llama-3.3-70b-versatile",
+        temperature: 0,
         response_format: { type: "json_object" }
       });
 
-      let text = completion.choices[0]?.message?.content || "[]";
+      let text = completion.choices[0]?.message?.content || "{}";
       console.log('[suggestRecipes] Received response, length:', text.length);
       
       const parsed = JSON.parse(text);
@@ -93,6 +94,7 @@ export async function getRecipeSteps(recipeId: string, recipeTitle?: string, ser
           }
         ],
          model: "llama-3.3-70b-versatile",
+         temperature: 0,
          response_format: { type: "json_object" }
        });
 
