@@ -135,3 +135,44 @@ export async function getRecipeSteps(recipeId: string, recipeTitle?: string, ser
     }];
   }
 }
+
+export async function getSubstitutes(ingredient: string, recipeContext?: string): Promise<any> {
+  console.log('[getSubstitutes] Called for:', ingredient);
+  
+  if (!groq) {
+    console.error("[getSubstitutes] GROQ_API_KEY is missing");
+    return null;
+  }
+
+  try {
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: `당신은 한국 요리에 능통한 보조 셰프입니다. 특정 식재료가 없을 때 사용할 수 있는 자연스러운 한국식 대체 재료를 제안하세요.
+
+[규칙]
+1. 한자, 외국어 사용 금지. 오직 자연스러운 한국어만 사용.
+2. 대체 재료는 한국 시장에서 쉽게 구할 수 있는 것으로 제안.
+3. 결과는 반드시 JSON 객체 형태로 반환하세요:
+   - ingredient: 원래 재료
+   - substitutes: 대체 재료 배열 (string[])
+   - advice: 조리 시 유의사항이나 팁 (string)`
+        },
+        {
+          role: "user",
+          content: `재료: "${ingredient}", 요리 맥락: "${recipeContext || '일반 한국 요리'}"`
+        }
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0,
+      response_format: { type: "json_object" }
+    });
+
+    const text = completion.choices[0]?.message?.content || "{}";
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("[getSubstitutes] Failed to get substitutes:", error);
+    return null;
+  }
+}
