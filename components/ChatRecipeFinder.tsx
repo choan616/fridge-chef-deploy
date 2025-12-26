@@ -68,7 +68,7 @@ export default function ChatRecipeFinder() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Fridge Chef</h1>
+        <h1 className={styles.title}>냉장고 셰프</h1>
         <p className={styles.subtitle}>AI 셰프와 대화하듯 레시피를 찾아보세요</p>
       </header>
 

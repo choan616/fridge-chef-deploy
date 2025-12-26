@@ -1,5 +1,5 @@
 .container {
-  min-height: 100vh;
+  min-height: calc( 100vh - 70px);
   display: flex;
   flex-direction: column;
   max-width: 900px;
@@ -110,8 +110,7 @@
 .inputArea {
   position: sticky;
   bottom: 0;
-  background: white;
-  padding: 1rem;
+  padding: 1rem 0;
   border-top: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
