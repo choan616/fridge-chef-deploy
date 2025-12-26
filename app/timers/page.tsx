@@ -14,12 +14,16 @@ export default function TimersPage() {
   const [activeTimer, setActiveTimer] = useState<string | null>(null);
   const [remainingTime, setRemainingTime] = useState<number>(0);
 
+  const [newLabel, setNewLabel] = useState("");
+  const [newMinutes, setNewMinutes] = useState(0);
+  const [newSeconds, setNewSeconds] = useState(0);
+  const [showAddForm, setShowAddForm] = useState(false);
+
   useEffect(() => {
     const saved = localStorage.getItem('savedTimers');
     if (saved) {
       setSavedTimers(JSON.parse(saved));
     } else {
-      // 기본 타이머 설정
       const defaults: SavedTimer[] = [
         { id: 'ramen', label: '라면', seconds: 240 },
         { id: 'egg', label: '계란 삶기', seconds: 360 },
@@ -60,6 +64,38 @@ export default function TimersPage() {
     setRemainingTime(0);
   };
 
+  const addCustomTimer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLabel || (newMinutes === 0 && newSeconds === 0)) return;
+
+    const totalSeconds = (newMinutes * 60) + newSeconds;
+    const newTimer: SavedTimer = {
+        id: `custom-${Date.now()}`,
+        label: newLabel,
+        seconds: totalSeconds
+    };
+
+    const updated = [...savedTimers, newTimer];
+    setSavedTimers(updated);
+    localStorage.setItem('savedTimers', JSON.stringify(updated));
+    
+    // Reset form
+    setNewLabel("");
+    setNewMinutes(0);
+    setNewSeconds(0);
+    setShowAddForm(false);
+  };
+
+  const deleteTimer = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent starting timer when clicking delete
+    const updated = savedTimers.filter(t => t.id !== id);
+    setSavedTimers(updated);
+    localStorage.setItem('savedTimers', JSON.stringify(updated));
+    if (activeTimer === id) {
+        stopTimer();
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -77,7 +113,7 @@ export default function TimersPage() {
         <div className={styles.activeTimer}>
           <div className={styles.timeDisplay}>{formatTime(remainingTime)}</div>
           <p className={styles.timerLabel}>
-            {savedTimers.find(t => t.id === activeTimer)?.label}
+            {savedTimers.find(t => t.id === activeTimer)?.label || "타이머"}
           </p>
           <button className={styles.stopBtn} onClick={stopTimer}>
             중지
@@ -85,9 +121,64 @@ export default function TimersPage() {
         </div>
       )}
 
+      <div className={styles.sectionHeader}>
+        <h2>나의 타이머</h2>
+        <button 
+            className={styles.addBtnToggle}
+            onClick={() => setShowAddForm(!showAddForm)}
+        >
+            {showAddForm ? '닫기' : '+ 추가'}
+        </button>
+      </div>
+
+      {showAddForm && (
+        <form className={styles.addForm} onSubmit={addCustomTimer}>
+            <div className={styles.formGroup}>
+                <label>이름</label>
+                <input 
+                    type="text" 
+                    placeholder="예: 반숙란, 비빔면" 
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    required
+                />
+            </div>
+            <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                    <label>분</label>
+                    <input 
+                        type="number" 
+                        min="0" 
+                        max="99"
+                        value={newMinutes}
+                        onChange={(e) => setNewMinutes(parseInt(e.target.value) || 0)}
+                    />
+                </div>
+                <div className={styles.formGroup}>
+                    <label>초</label>
+                    <input 
+                        type="number" 
+                        min="0" 
+                        max="59"
+                        value={newSeconds}
+                        onChange={(e) => setNewSeconds(parseInt(e.target.value) || 0)}
+                    />
+                </div>
+            </div>
+            <button type="submit" className={styles.saveBtn}>저장하기</button>
+        </form>
+      )}
+
       <div className={styles.timerGrid}>
         {savedTimers.map((timer) => (
           <div key={timer.id} className={styles.timerCard}>
+            <button 
+                className={styles.deleteBtn}
+                onClick={(e) => deleteTimer(timer.id, e)}
+                title="삭제"
+            >
+                ✕
+            </button>
             <h3>{timer.label}</h3>
             <p className={styles.duration}>{formatTime(timer.seconds)}</p>
             <button
