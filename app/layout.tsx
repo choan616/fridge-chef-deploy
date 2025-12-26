@@ -16,6 +16,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Fridge Chef - 냉장고 셰프",
   description: "AI가 냉장고 재료로 한국 레시피를 추천해드립니다",
+  manifest: "/manifest.json",
+  themeColor: "#2dd4bf",
 };
 
 export default function RootLayout({

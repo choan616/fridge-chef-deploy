@@ -1,0 +1,16 @@
+{
+  "name": "Fridge Chef - 냉장고 셰프",
+  "short_name": "Fridge Chef",
+  "description": "AI가 냉장고 재료로 한국 레시피를 추천해드립니다",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2dd4bf",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
