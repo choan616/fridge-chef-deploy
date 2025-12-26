@@ -5,9 +5,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { RecipeStep } from "@/types";
+import { getSubstitutesAction } from "@/app/actions";
 import styles from "./CookingChat.module.css";
-
-import { getSubstitutes } from "@/lib/mcpClient";
 
 interface Props {
   steps: RecipeStep[];
@@ -22,6 +21,9 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [substitutes, setSubstitutes] = useState<any>(null);
   const [isLoadingSubs, setIsLoadingSubs] = useState(false);
+  const [servings, setServings] = useState(2);
+  const [timerActive, setTimerActive] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(0);
   
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
@@ -50,7 +52,7 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
       speak(currentStep.instruction, () => {
         // After reading instruction, ask if they want to move to next step
         setTimeout(() => {
-            speak("다음단계로 넘어갈까요?");
+            speak("다음계로 넘어갈까요?");
         }, 1000);
       });
     }
@@ -75,13 +77,10 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
   };
 
   const handleGetSubstitutes = async () => {
-    // For simplicity, we'll try to get substitutes for the first 2 ingredients of the recipe
-    // Or we could parse the current instruction. Let's just use the recipe context for now.
     setIsLoadingSubs(true);
     setSubstitutes(null);
     try {
-        // We'll ask the model to suggest substitutes based on the recipe title
-        const result = await getSubstitutes("주요 재료", title);
+        const result = await getSubstitutesAction("주요 재료", title);
         setSubstitutes(result);
     } catch (e) {
         console.error(e);
@@ -89,6 +88,29 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
         setIsLoadingSubs(false);
     }
   };
+
+  const startVoiceTimer = (minutes: number) => {
+    setTimerSeconds(minutes * 60);
+    setTimerActive(true);
+    speak(`${minutes}분 타이머를 시작합니다`);
+  };
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (timerActive && timerSeconds > 0) {
+      const interval = setInterval(() => {
+        setTimerSeconds(prev => {
+          if (prev <= 1) {
+            setTimerActive(false);
+            speak('타이머가 끝났습니다!');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timerActive, timerSeconds]);
 
   // Voice Recognition Effect
   useEffect(() => {
@@ -126,6 +148,12 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
         } else if (text.includes("다시") || text.includes("읽어") || text.includes("뭐라고")) {
           const step = steps[indexRef.current];
           if (step) speak(step.instruction);
+        } else if (text.includes("타이머")) {
+          const match = text.match(/(\d+)분/);
+          if (match) {
+            const mins = parseInt(match[1]);
+            startVoiceTimer(mins);
+          }
         } else if (isLastStep && (text.includes("저장") || text.includes("홈") || text.includes("처음"))) {
             if (text.includes("홈") || text.includes("처음")) handleHome();
             if (text.includes("저장")) handleSave();
@@ -218,12 +246,22 @@ export default function CookingChat({ steps, recipeId, title }: Props) {
     <div className={styles.container}>
       <div className={styles.progress}>
         단계 {currentStepIndex + 1} / {steps.length}
+        <div className={styles.servingControl}>
+          <button onClick={() => setServings(Math.max(1, servings - 1))}>-</button>
+          <span>{servings}인분</span>
+          <button onClick={() => setServings(servings + 1)}>+</button>
+        </div>
         <div className={styles.progressBar}>
           <div 
             className={styles.progressFill} 
             style={{ width: `${((currentStepIndex + 1) / steps.length) * 100}%` }}
           />
         </div>
+        {timerActive && (
+          <div className={styles.timerBadge}>
+            ⏱️ {Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}
+          </div>
+        )}
       </div>
 
       <div className={styles.chatArea}>

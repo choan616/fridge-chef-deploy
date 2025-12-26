@@ -1,9 +1,9 @@
-import RecipeFinder from "@/components/RecipeFinder";
+import ChatRecipeFinder from "@/components/ChatRecipeFinder";
 
 export default function Home() {
   return (
     <main>
-      <RecipeFinder />
+      <ChatRecipeFinder />
     </main>
   );
 }
